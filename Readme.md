@@ -89,7 +89,7 @@ func main() {
 
 ### Struct Embedding (Composition)
 
-Go does not use class inheritance. Instead, it uses embedding to promote fields and methods.
+Go does not use class **inheritance**. Instead, it uses **embedding** to promote fields and methods.
 
 ```go
 package main
@@ -126,6 +126,7 @@ import "fmt"
 
 type User struct {
     Username string
+    Email    string
     IsActive bool
 }
 
@@ -134,7 +135,83 @@ func (u User) IsActiveUser() bool {
 }
 
 func main() {
-    u := User{Username: "gopher123", IsActive: true}
+    u := User{Username: "gopher123", Email: "go@example.com", IsActive: true}
     fmt.Println(u.IsActiveUser())
+}
+```
+
+#### Mutable Methods on Structs
+
+```go
+func (u *User) Deactivate() {
+    u.IsActive = false
+}
+
+func main() {
+    u := User{Username: "gopher123", Email: "go@example.com", IsActive: true}
+    u.Deactivate()
+    fmt.Println(u.IsActive) // false
+}
+```
+
+#### Contructor Function for Structs
+
+```go
+func NewUser(username, email string) (*User, error) { // used pointer return type to avoid copying
+
+    if username == "" || email == "" {
+        return nil, fmt.Errorf("invalid user input")
+    }
+
+    return &User{
+        Username: username,
+        Email: email,
+        IsActive: true
+    }, nil
+}
+
+var appUser *User
+appUser, err := NewUser("gopher123", "go@example.com")
+if err != nil {
+    fmt.Println("Error creating user:", err)
+    return
+}
+fmt.Println(appUser.Username) // gopher123
+````
+
+#### Struct Embedding vs Inheritance
+Go does not support traditional class inheritance. Instead, it uses struct embedding to achieve similar functionality. When you embed a struct, the fields and methods of the embedded struct are promoted to the outer struct, allowing you to access them directly.
+
+```go
+type User struct {
+	Username string
+	Email    string
+}
+
+func (u User) GetEmail() string {
+	return u.Email
+}
+
+func (u *User) SetEmail(newEmail string) {
+	u.Email = newEmail
+}
+
+type Admin struct {
+	User  // embedded struct
+	Level int
+}
+
+func main() {
+	a := Admin{
+		User:  User{Username: "admin01", Email: "admin@example.com"},
+		Level: 10,
+	}
+
+	fmt.Println(a.Username)   // promoted field from embedded User
+	fmt.Println(a.Email)      // promoted field from embedded User
+	fmt.Println(a.GetEmail()) // promoted method from embedded User
+	a.SetEmail("newemail@example.com")
+	fmt.Println(a.Email) // promoted field from embedded User
+	fmt.Println(a.Level) // field from Admin struct
 }
 ```
