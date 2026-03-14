@@ -215,3 +215,4 @@ func main() {
 	fmt.Println(a.Level) // field from Admin struct
 }
 ```
+
