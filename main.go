@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -15,7 +16,10 @@ func main() {
 		})
 	})
 
-	r.Run(":8080")
+	// Wrap r.Run in a log.Fatal to catch and report startup errors
+	if err := r.Run(":8080"); err != nil {
+		log.Fatalf("Failed to run server: %v", err)
+	}
 }
 
 // package main
