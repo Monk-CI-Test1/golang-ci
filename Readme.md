@@ -216,3 +216,153 @@ func main() {
 }
 ```
 
+
+## 3. Interfaces
+Interfaces define a set of method signatures. Any type that implements those methods satisfies the interface, allowing for polymorphism. It doesn’t contain data; it only defines behavior.
+
+Benefits of interfaces:
+- decoupling: code can work with any type that satisfies the interface
+- flexibility: you can define multiple implementations of the same interface
+- easier testing: you can create mock implementations for testing
+- better code organization: interfaces help define clear contracts for behavior
+
+
+```go
+package main
+
+import "fmt"
+
+// 1. Define the interface (Contract)
+type Shape interface {
+    Area() float64
+}
+// Any struct that implements 'Shape' interface must have an Area() method that returns a float64 value.
+
+// 2. Implement with a Struct (Circle)
+type Circle struct {
+    Radius float64
+}
+
+func (c Circle) Area() float64 {
+    return 3.14 * c.Radius * c.Radius
+}
+
+// 3. Implement with another Struct (Square)
+type Square struct {
+    Side float64
+}
+
+func (s Square) Area() float64 {
+    return s.Side * s.Side
+}
+
+func main() {
+    // Both Circle and Square "are" Shapes
+    shapes := []Shape{
+        Circle{Radius: 5},
+        Square{Side: 10},
+    }
+
+    for _, s := range shapes {
+        fmt.Printf("Area: %0.2f\n", s.Area())
+    }
+}
+```
+
+#### Empty Interface (any)
+The empty interface `interface{}` can hold values of any type. It’s often used for functions that need to accept any type of data.
+
+```go
+func PrintValue(v interface{}) {
+    fmt.Printf("Value: %v, Type: %T\n", v, v)
+
+func PrintValue2(v any) { // 'any' is an alias for 'interface{}'
+    fmt.Printf("Value: %v, Type: %T\n", v, v)
+}
+```
+
+#### Type Assertions and Type Switches
+You can use type assertions to extract the underlying value from an interface variable, or type switches to handle multiple types.
+
+```go
+func main() {
+    var v interface{} = "Hello, Go!"
+    // Type assertion
+    str, ok := v.(string)
+    if ok {
+        fmt.Println("String value:", str)
+    } else {
+        fmt.Println("Not a string")
+    }   
+
+
+    // Type switch
+    switch val := v.(type) {
+    case string:
+        fmt.Println("String value:", val)
+    case int:
+        fmt.Println("Integer value:", val)
+    default:
+        fmt.Println("Unknown type")
+    }
+}
+```
+
+#### Interface Embedding
+Go allows you to embed interfaces within other interfaces, which promotes the methods of the embedded interface to the outer interface.
+
+```go
+type Reader interface {
+    Read(p []byte) (n int, err error)
+}
+type Writer interface {
+    Write(p []byte) (n int, err error)
+}
+type ReadWriter interface {
+    Reader
+    Writer
+}
+```
+
+#### Interface Limitations and Dynamic Types
+While interfaces provide powerful abstraction, they have some limitations:
+- no support for fields (interfaces only define behavior, not data)
+- no support for constructors (you need to create instances of concrete types that implement the interface)
+
+```go
+func add(a, b interface{}) {
+    return a + b // This will cause a compile-time error because the compiler doesn't know how to add two empty interfaces
+}
+
+func add(a, b interface{}) interface{} {
+    aInt, aIsInt := a.(int)
+    bInt, bIsInt := b.(int)
+    if aIsInt && bIsInt {
+        return aInt + bInt
+    }
+    
+    aFloat, aIsFloat := a.(float64)
+    bFloat, bIsFloat := b.(float64)
+    if aIsFloat && bIsFloat {
+        return aFloat + bFloat
+    }
+    return nil
+}
+```
+
+#### Generics Concept
+This is a feature introduced in Go 1.18 that allows you to write code that can work with multiple types. Generics enable you to create functions and types that are parameterized by type, providing type safety at compile time.
+
+```go
+func add[T comparable](a, b T) T {
+    return a + b
+}
+
+func add[T any](a, b T) T {
+    return a + b
+}
+
+func add[T int | float64 | string](a, b T) T {
+    return a + b
+}
+```
