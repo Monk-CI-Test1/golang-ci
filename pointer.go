@@ -231,43 +231,225 @@
 // 	fmt.Println("Final Counter Value:", c.value) // Should print 1000
 // }
 
-package main
+//=====================
 
-import (
-	"fmt"
-	"sync"
-)
+// package main
 
-type post struct {
-	views int
-	mu    sync.Mutex
-}
+// import (
+// 	"fmt"
+// 	"sync"
+// )
 
-//	func (p *post) incrementViews(wg *sync.WaitGroup) {
-//		defer wg.Done()
-//		p.mu.Lock()
-//		p.views += 1
-//		defer p.mu.Unlock()
-//	}
-func (p *post) incrementViews(wg *sync.WaitGroup) {
-	defer func() {
-		wg.Done()
-		p.mu.Unlock()
-	}()
-	p.mu.Lock()
-	p.views += 1
-}
+// type post struct {
+// 	views int
+// 	mu    sync.Mutex
+// }
 
-// Request will come concurrently
+// //	func (p *post) incrementViews(wg *sync.WaitGroup) {
+// //		defer wg.Done()
+// //		p.mu.Lock()
+// //		p.views += 1
+// //		defer p.mu.Unlock()
+// //	}
+// func (p *post) incrementViews(wg *sync.WaitGroup) {
+// 	defer func() {
+// 		wg.Done()
+// 		p.mu.Unlock()
+// 	}()
+// 	p.mu.Lock()
+// 	p.views += 1
+// }
 
-func main() {
-	var wg sync.WaitGroup
-	myPost := post{views: 0}
+// // Request will come concurrently
 
-	for i := 0; i < 1000; i++ {
-		wg.Add(1)
-		go myPost.incrementViews(&wg)
-	}
-	wg.Wait()                 // Wait for all increments to finish
-	fmt.Println(myPost.views) // Output: random
-}
+// func main() {
+// 	var wg sync.WaitGroup
+// 	myPost := post{views: 0}
+
+// 	for i := 0; i < 1000; i++ {
+// 		wg.Add(1)
+// 		go myPost.incrementViews(&wg)
+// 	}
+// 	wg.Wait()                 // Wait for all increments to finish
+// 	fmt.Println(myPost.views) // Output: random
+// }
+
+// ===============
+
+// package main
+
+// import (
+// 	"fmt"
+// 	"sync"
+// )
+
+// type post struct {
+// 	views int
+// 	mu    sync.RWMutex
+// }
+
+// func (p *post) incrementViews(wg *sync.WaitGroup) {
+// 	defer func() {
+// 		wg.Done()
+// 		p.mu.Unlock()
+// 	}()
+// 	p.mu.Lock()
+// 	p.views += 1
+// }
+
+// func (p *post) getViews() int {
+// 	p.mu.RLock()
+// 	defer p.mu.RUnlock()
+// 	return p.views
+// }
+
+// func main() {
+// 	var wg sync.WaitGroup
+// 	myPost := post{views: 0}
+
+// 	for i := 0; i < 1000; i++ {
+// 		wg.Add(1)
+// 		go myPost.incrementViews(&wg)
+// 	}
+// 	wg.Wait() // Wait for all increments to finish
+
+// 	fmt.Println(myPost.getViews()) // Output: 1000
+// }
+
+/// ========= Sending data to go routine through channel =========
+
+// package main
+
+// import (
+// 	"fmt"
+// 	"math/rand"
+// 	"time"
+// )
+
+// func processNum(numChan chan int) {
+// 	for num := range numChan {
+// 		fmt.Println("Processing number:", num)
+// 		time.Sleep(1 * time.Second) // Simulate processing time
+// 	}
+// }
+
+// func main() {
+// 	numChan := make(chan int)
+
+// 	go processNum(numChan)
+
+// 	// numChan <- 42
+// 	for {
+// 		numChan <- rand.Intn(100) // Send a random number to the channel
+// 	}
+
+// 	// time.Sleep(2 * time.Second)
+
+// 	// Wait for a moment to allow the goroutine to finish processing
+// 	fmt.Scanln()
+// }
+
+// ==================== Recieving data from go routine through channel===========
+// package main
+
+// func sum(result chan int, num1 int, num2 int) {
+// 	res := num1 + num2
+// 	result <- res
+// }
+
+// func main() {
+// 	resultChan := make(chan int)
+
+// 	go sum(resultChan, 5, 10)
+
+// 	result := <-resultChan
+// 	println("The sum is:", result)
+// }
+
+// ======================== Goroutine Synchronizer =========================
+
+// package main
+
+// import "fmt"
+
+// func task(done chan bool) {
+// 	defer func() {
+// 		done <- true
+// 	}()
+
+// 	fmt.Println("Processing task...")
+// }
+
+// func main() {
+// 	done := make(chan bool) // Unbuffered channel to signal completion
+
+// 	go task(done)
+
+// 	<-done // block until the task signals completion
+// 	fmt.Println("Task completed")
+// }
+
+// ======================== Bufferered Channel =========================
+
+// package main
+
+// import (
+// 	"fmt"
+// 	"time"
+// )
+
+// func emailSender(emailChan chan string, done chan bool) {
+// 	defer func() {
+// 		done <- true // Signal that the email sending is done
+// 	}()
+// 	for email := range emailChan {
+// 		fmt.Println("Sending email to:", email)
+// 		time.Sleep(100 * time.Millisecond) // Simulate time taken to send an email
+// 	}
+// }
+
+// func main() {
+// 	emailChan := make(chan string, 100) // Create a buffered channel with capacity of 100 (not blocking until 100 emails are sent)
+// 	done := make(chan bool)
+
+// 	go emailSender(emailChan, done)
+
+// 	for i := 0; i < 100; i++ {
+// 		emailChan <- fmt.Sprintf("email%d@example.com", i)
+// 	}
+
+// 	fmt.Println("All emails queued for sending")
+
+// 	close(emailChan) // Close the channel to signal no more emails will be sent
+
+// 	<-done // Wait for the email sender to finish
+// }
+
+// ========= Listen 2 chanels at the same time
+
+// package main
+
+// func main() {
+// 	chan1 := make(chan int)
+// 	chan2 := make(chan string)
+
+// 	go func() {
+// 		chan1 <- 10
+// 	}()
+
+// 	go func() {
+// 		chan2 <- "Hello, World!"
+// 	}()
+
+// 	for i := 0; i < 2; i++ {
+// 		select {
+// 		case num := <-chan1:
+// 			println("Received number:", num)
+// 		case msg := <-chan2:
+// 			println("Received message:", msg)
+// 		}
+// 	}
+// }
+
+// done chan<- bool  // Send-only channel (can only send data to it)
+// emailChan <-chann string // Receive-only channel (can only receive data from it)

@@ -603,3 +603,48 @@ func main() {
 	fmt.Println(myPost.views) // Output: 1000
 }
 ```
+
+## 10. sync.RWMutex (Read-Write Mutex)
+A `sync.RWMutex` allows multiple readers or one writer at a time. It provides better performance for read-heavy workloads by allowing concurrent reads while still ensuring exclusive access for writes.
+
+```go
+package main
+
+import (
+    "fmt"
+    "sync"
+)
+
+type post struct {
+    views int
+    mu    sync.RWMutex
+}
+
+func (p *post) incrementViews(wg *sync.WaitGroup) {
+    defer func() {
+        wg.Done()
+        p.mu.Unlock()
+    }()
+    p.mu.Lock()
+    p.views += 1
+}
+
+func (p *post) getViews() int {
+    p.mu.RLock()
+    defer p.mu.RUnlock()
+    return p.views
+}
+
+func main() {
+    var wg sync.WaitGroup
+    myPost := post{views: 0}
+
+    for i := 0; i < 1000; i++ {
+        wg.Add(1)
+        go myPost.incrementViews(&wg)
+    }
+    wg.Wait() // Wait for all increments to finish
+
+    fmt.Println(myPost.getViews()) // Output: 1000
+}
+```
