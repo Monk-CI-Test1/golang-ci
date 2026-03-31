@@ -1,4 +1,4 @@
-# Go Basics 2
+# Go Basics 3
 
 A structured reference guide to core Go concepts with examples.
 
