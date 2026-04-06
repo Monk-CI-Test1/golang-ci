@@ -21,7 +21,7 @@ jobs:
 
     # Job 2: Testing
     test:
-        runs-on: ubuntu-latest
+        runs-on: monkci-ubuntu-24.04-2
         needs: lint # Only run tests if linting passes
         steps:
             - uses: actions/checkout@v6
@@ -34,7 +34,7 @@ jobs:
 
     # Job 3: Build
     build:
-        runs-on: ubuntu-latest
+        runs-on: monkci-ubuntu-24.04-2
         needs: test # Only build if tests pass
         steps:
             - uses: actions/checkout@v6
